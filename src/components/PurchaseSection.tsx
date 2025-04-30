@@ -53,6 +53,15 @@ const PurchaseSection = () => {
       buttonText: "Comprar en Gumroad",
       actionUrl: "#", // Replace with actual Gumroad URL
       color: "bg-[#FF90E8]"
+    },
+    {
+      id: "amazon",
+      name: "Amazon",
+      description: "Compra a través de Amazon",
+      icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/1024px-Amazon_logo.svg.png",
+      buttonText: "Comprar en Amazon",
+      actionUrl: "#", // Replace with actual Amazon URL
+      color: "bg-[#FF9900]"
     }
   ];
 
@@ -71,7 +80,7 @@ const PurchaseSection = () => {
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {paymentOptions.map((option) => (
             <Card key={option.id} className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
               <div className={`h-2 ${option.color}`}></div>
