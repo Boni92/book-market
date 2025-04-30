@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Tooltip,
@@ -7,14 +8,33 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
 
 const PurchaseSection = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   
-  const handleStripePurchase = () => {
-    // En una implementación real, esto se conectaría con la API de Stripe
-    // Por ahora, simulamos una compra exitosa
-    navigate("/success");
+  const handleStripePurchase = async () => {
+    setIsLoading(true);
+    try {
+      // En una implementación real con Supabase, invocaríamos una función Edge:
+      // const { data, error } = await supabase.functions.invoke('create-payment')
+      
+      // Por ahora, simulamos un proceso de pago exitoso con un delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // En una implementación real, redirigiríamos al usuario a la URL de checkout de Stripe:
+      // if (data?.url) window.location.href = data.url
+      
+      // Por ahora, simplemente redirigimos al usuario a la página de éxito
+      toast.success("Procesando su pago...");
+      navigate("/success");
+    } catch (error) {
+      console.error("Error procesando el pago:", error);
+      toast.error("Error al procesar el pago. Por favor, intente nuevamente.");
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const paymentOptions = [
@@ -111,9 +131,10 @@ const PurchaseSection = () => {
                       ) : (
                         <button 
                           onClick={option.action}
-                          className={`${option.color} text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg w-full`}
+                          disabled={option.id === "stripe" && isLoading}
+                          className={`${option.color} text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg w-full ${option.id === "stripe" && isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
                         >
-                          {option.buttonText}
+                          {option.id === "stripe" && isLoading ? "Procesando..." : option.buttonText}
                         </button>
                       )}
                     </TooltipTrigger>

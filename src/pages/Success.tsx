@@ -8,12 +8,14 @@ import Header from "@/components/Header";
 const Success = () => {
   const navigate = useNavigate();
   
-  // In a real implementation, you would validate the purchase here
-  // by checking URL parameters or session data
-  
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
+    
+    // En una implementación completa, verificaríamos el estado del pago con Stripe
+    // usando una función Edge que verifique el sessionId en los parámetros URL
+    
+    // También podríamos actualizar el registro del pedido en la base de datos
   }, []);
 
   return (
