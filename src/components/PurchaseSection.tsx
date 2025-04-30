@@ -6,8 +6,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useNavigate } from "react-router-dom";
 
 const PurchaseSection = () => {
+  const navigate = useNavigate();
+  
+  const handleStripePurchase = () => {
+    // En una implementación real, esto se conectaría con la API de Stripe
+    // Por ahora, simulamos una compra exitosa
+    navigate("/success");
+  };
+  
   const paymentOptions = [
     {
       id: "paypal",
@@ -28,6 +37,15 @@ const PurchaseSection = () => {
       color: "bg-[#00B1EA]"
     },
     {
+      id: "stripe",
+      name: "Stripe",
+      description: "Pago seguro con tarjeta de crédito/débito",
+      icon: "https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg",
+      buttonText: "Pagar con Tarjeta",
+      action: handleStripePurchase,
+      color: "bg-[#6772E5]"
+    },
+    {
       id: "gumroad",
       name: "Gumroad",
       description: "Descarga instantánea a través de Gumroad",
@@ -35,15 +53,6 @@ const PurchaseSection = () => {
       buttonText: "Comprar en Gumroad",
       actionUrl: "#", // Replace with actual Gumroad URL
       color: "bg-[#FF90E8]"
-    },
-    {
-      id: "amazon",
-      name: "Amazon",
-      description: "Compra a través de Amazon",
-      icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/1024px-Amazon_logo.svg.png",
-      buttonText: "Comprar en Amazon",
-      actionUrl: "#", // Replace with actual Amazon URL
-      color: "bg-[#FF9900]"
     }
   ];
 
@@ -81,14 +90,23 @@ const PurchaseSection = () => {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <a 
-                        href={option.actionUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`${option.color} text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg w-full block text-center`}
-                      >
-                        {option.buttonText}
-                      </a>
+                      {option.actionUrl ? (
+                        <a 
+                          href={option.actionUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`${option.color} text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg w-full block text-center`}
+                        >
+                          {option.buttonText}
+                        </a>
+                      ) : (
+                        <button 
+                          onClick={option.action}
+                          className={`${option.color} text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg w-full`}
+                        >
+                          {option.buttonText}
+                        </button>
+                      )}
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Compra segura con {option.name}</p>

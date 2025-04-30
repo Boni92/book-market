@@ -13,8 +13,8 @@ import ThankYouSection from "@/components/ThankYouSection";
 const Index = () => {
   const [purchaseCompleted, setPurchaseCompleted] = useState(false);
 
-  // In a real implementation, this would be determined by a URL parameter
-  // or a state management solution after a successful payment
+  // En una real implementación, esto sería determinado por un parámetro URL
+  // o una solución de gestión de estado después de un pago exitoso
   const showThankYou = false; // Set to true to show the thank you page
 
   return (
