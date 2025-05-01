@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
+import { createClient } from "@supabase/supabase-js";
 
 const PurchaseSection = () => {
   const navigate = useNavigate();
@@ -17,18 +18,35 @@ const PurchaseSection = () => {
   const handleStripePurchase = async () => {
     setIsLoading(true);
     try {
-      // En una implementación real con Supabase, invocaríamos una función Edge:
-      // const { data, error } = await supabase.functions.invoke('create-payment')
+      // Inicializamos el cliente de Supabase con las variables de entorno
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
-      // Por ahora, simulamos un proceso de pago exitoso con un delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Validamos que las variables de entorno estén configuradas
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error("Faltan variables de entorno de Supabase");
+      }
       
-      // En una implementación real, redirigiríamos al usuario a la URL de checkout de Stripe:
-      // if (data?.url) window.location.href = data.url
+      // Creamos el cliente de Supabase
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
       
-      // Por ahora, simplemente redirigimos al usuario a la página de éxito
-      toast.success("Procesando su pago...");
-      navigate("/success");
+      // Invocamos la función Edge para crear la sesión de checkout
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { 
+          amount: 1999, // Precio en centavos ($19.99)
+          productName: "Mi Libro Digital"
+        }
+      });
+      
+      if (error) throw error;
+      
+      // Redirigimos al usuario a la URL de checkout de Stripe
+      if (data?.url) {
+        toast.success("Redirigiendo a la pasarela de pago...");
+        window.location.href = data.url;
+      } else {
+        throw new Error("No se recibió la URL de checkout");
+      }
     } catch (error) {
       console.error("Error procesando el pago:", error);
       toast.error("Error al procesar el pago. Por favor, intente nuevamente.");
