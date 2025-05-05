@@ -8,6 +8,7 @@ import { toast } from "@/components/ui/sonner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { createClient } from "@supabase/supabase-js";
 import { CheckCircle, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Success = () => {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ const Success = () => {
         
         const supabase = createClient(supabaseUrl, supabaseAnonKey);
         
-        // Verificamos el estado del pago
+        // Verificamos el estado del pago usando la función Edge
         const { data, error } = await supabase.functions.invoke('verify-payment', {
           body: { sessionId }
         });
@@ -50,9 +51,11 @@ const Success = () => {
         if (data?.status === "complete" || data?.status === "paid") {
           setPaymentStatus("success");
           toast.success("¡Pago confirmado! Gracias por tu compra.");
-        } else {
+        } else if (data?.status === "pending" || data?.status === "processing") {
           setPaymentStatus("pending");
           toast.warning("Pago en proceso. Te notificaremos cuando se confirme.");
+        } else {
+          throw new Error(`Estado de pago desconocido: ${data?.status}`);
         }
       } catch (error) {
         console.error("Error verificando el pago:", error);
@@ -90,12 +93,12 @@ const Success = () => {
           </Alert>
           
           <div className="mt-8 text-center">
-            <button 
+            <Button 
               onClick={() => navigate("/")}
-              className="bg-book-primary text-white py-2 px-6 rounded-lg font-medium hover:bg-book-primary/90"
+              className="bg-book-primary text-white hover:bg-book-primary/90"
             >
               Volver al inicio
-            </button>
+            </Button>
           </div>
         </div>
       )}

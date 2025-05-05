@@ -33,7 +33,7 @@ const PurchaseSection = () => {
       // Invocamos la función Edge para crear la sesión de checkout
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { 
-          amount: 1999, // Precio en centavos ($19.99)
+          priceId: "price_1RLSLHRwduV6mlsL1YDvuIMa", // ID del precio proporcionado
           productName: "Mi Libro Digital"
         }
       });
