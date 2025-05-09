@@ -15,6 +15,7 @@ const Success = () => {
   const [searchParams] = useSearchParams();
   const [verifying, setVerifying] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState<"success" | "pending" | "error" | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
   
   useEffect(() => {
     // Scroll to top when component mounts
@@ -50,10 +51,11 @@ const Success = () => {
         
         if (data?.status === "complete" || data?.status === "paid") {
           setPaymentStatus("success");
-          toast.success("¡Pago confirmado! Gracias por tu compra.");
+          setEmailSent(true);
+          toast.success("¡Pago confirmado! Hemos enviado tu libro digital por correo electrónico.");
         } else if (data?.status === "pending" || data?.status === "processing") {
           setPaymentStatus("pending");
-          toast.warning("Pago en proceso. Te notificaremos cuando se confirme.");
+          toast.warning("Pago en proceso. Te enviaremos el libro por correo cuando se confirme el pago.");
         } else {
           throw new Error(`Estado de pago desconocido: ${data?.status}`);
         }
@@ -111,7 +113,7 @@ const Success = () => {
                 <AlertTriangle className="h-5 w-5" />
                 <AlertTitle>Pago en proceso</AlertTitle>
                 <AlertDescription>
-                  Tu pago está siendo procesado. Te enviaremos un correo electrónico cuando se confirme.
+                  Tu pago está siendo procesado. Te enviaremos un correo electrónico con el libro una vez que se confirme.
                 </AlertDescription>
               </Alert>
             </div>
@@ -123,7 +125,9 @@ const Success = () => {
                 <CheckCircle className="h-5 w-5 text-green-500" />
                 <AlertTitle className="text-green-700">¡Pago confirmado!</AlertTitle>
                 <AlertDescription className="text-green-600">
-                  Tu pago ha sido procesado correctamente. ¡Disfruta de tu compra!
+                  {emailSent ? 
+                    "Tu pago ha sido procesado correctamente. Hemos enviado el libro digital a tu dirección de correo electrónico." : 
+                    "Tu pago ha sido procesado correctamente. ¡Disfruta de tu compra!"}
                 </AlertDescription>
               </Alert>
             </div>
