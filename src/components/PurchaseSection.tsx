@@ -27,10 +27,13 @@ const PurchaseSection = () => {
         throw new Error("Faltan variables de entorno de Supabase");
       }
       
+      console.log("Conectando a Supabase:", supabaseUrl);
+      
       // Creamos el cliente de Supabase
       const supabase = createClient(supabaseUrl, supabaseAnonKey);
       
       // Invocamos la función Edge para crear la sesión de checkout
+      console.log("Invocando función create-payment");
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { 
           priceId: "price_1RLSLHRwduV6mlsL1YDvuIMa", // ID del precio proporcionado
@@ -38,18 +41,24 @@ const PurchaseSection = () => {
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error desde función Edge:", error);
+        throw error;
+      }
+      
+      console.log("Respuesta de create-payment:", data);
       
       // Redirigimos al usuario a la URL de checkout de Stripe
       if (data?.url) {
         toast.success("Redirigiendo a la pasarela de pago...");
+        console.log("Redirigiendo a URL de Stripe:", data.url);
         window.location.href = data.url;
       } else {
-        throw new Error("No se recibió la URL de checkout");
+        throw new Error("No se recibió la URL de checkout en la respuesta");
       }
     } catch (error) {
       console.error("Error procesando el pago:", error);
-      toast.error("Error al procesar el pago. Por favor, intente nuevamente.");
+      toast.error(`Error al procesar el pago: ${error instanceof Error ? error.message : "Por favor revisa la consola para más detalles"}`);
     } finally {
       setIsLoading(false);
     }

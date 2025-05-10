@@ -32,22 +32,34 @@ const Success = () => {
       }
       
       try {
+        console.log("Verificando pago con session_id:", sessionId);
+        
         // Inicializamos el cliente de Supabase
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         
+        // Validamos que las variables de entorno estén configuradas
         if (!supabaseUrl || !supabaseAnonKey) {
+          console.error("Error: Faltan variables de entorno de Supabase");
           throw new Error("Faltan variables de entorno de Supabase");
         }
+        
+        console.log("Conectando a Supabase:", supabaseUrl);
         
         const supabase = createClient(supabaseUrl, supabaseAnonKey);
         
         // Verificamos el estado del pago usando la función Edge
+        console.log("Invocando función verify-payment");
         const { data, error } = await supabase.functions.invoke('verify-payment', {
           body: { sessionId }
         });
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error desde función Edge verify-payment:", error);
+          throw error;
+        }
+        
+        console.log("Respuesta de verify-payment:", data);
         
         if (data?.status === "complete" || data?.status === "paid") {
           setPaymentStatus("success");
@@ -57,12 +69,13 @@ const Success = () => {
           setPaymentStatus("pending");
           toast.warning("Pago en proceso. Te enviaremos el libro por correo cuando se confirme el pago.");
         } else {
+          console.error("Estado de pago desconocido:", data?.status);
           throw new Error(`Estado de pago desconocido: ${data?.status}`);
         }
       } catch (error) {
         console.error("Error verificando el pago:", error);
         setPaymentStatus("error");
-        toast.error("Error al verificar el pago. Por favor, contacta con soporte.");
+        toast.error(`Error al verificar el pago: ${error instanceof Error ? error.message : "Por favor, contacta con soporte."}`);
       } finally {
         setVerifying(false);
       }
