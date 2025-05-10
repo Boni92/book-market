@@ -29,8 +29,12 @@ const PurchaseSection = () => {
       
       console.log("Conectando a Supabase:", supabaseUrl);
       
-      // Creamos el cliente de Supabase
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      // Creamos el cliente de Supabase con opciones para manejar CORS
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: true
+        }
+      });
       
       // Invocamos la función Edge para crear la sesión de checkout
       console.log("Invocando función create-payment");
@@ -43,6 +47,32 @@ const PurchaseSection = () => {
       
       if (error) {
         console.error("Error desde función Edge:", error);
+        
+        // Mensaje específico para error de CORS
+        if (error.message && error.message.includes("Failed to send a request")) {
+          toast.error("Error de CORS: No se puede conectar con las funciones de Supabase. Por favor, configura los encabezados CORS en tu función Edge.");
+          
+          console.log("SOLUCIÓN: Necesitas configurar tu función Edge de Supabase para permitir solicitudes CORS desde tu dominio.");
+          console.log("Agrega los siguientes encabezados en tu función Edge:");
+          console.log(`
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*", // O específicamente "https://libro-digital-venta.lovable.app"
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+// Al inicio de tu función:
+if (req.method === "OPTIONS") {
+  return new Response(null, { headers: corsHeaders });
+}
+
+// En todas las respuestas:
+return new Response(JSON.stringify({ ... }), {
+  headers: { ...corsHeaders, "Content-Type": "application/json" },
+  status: 200,
+});
+          `);
+          throw new Error("Error de CORS. Revisa la consola para la solución.");
+        }
         throw error;
       }
       
@@ -188,3 +218,4 @@ const PurchaseSection = () => {
 };
 
 export default PurchaseSection;
+
