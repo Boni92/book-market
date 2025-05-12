@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -36,9 +35,9 @@ const PurchaseSection = () => {
         }
       });
       
-      // Invocamos la función Edge para crear la sesión de checkout
-      console.log("Invocando función create-payment");
-      const { data, error } = await supabase.functions.invoke('create-payment', {
+      // Invocamos la función Edge con el nombre correcto: create-checkout-session
+      console.log("Invocando función create-checkout-session");
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { 
           priceId: "price_1RLSLHRwduV6mlsL1YDvuIMa", // ID del precio proporcionado
           productName: "Mi Libro Digital"
@@ -76,7 +75,7 @@ return new Response(JSON.stringify({ ... }), {
         throw error;
       }
       
-      console.log("Respuesta de create-payment:", data);
+      console.log("Respuesta de create-checkout-session:", data);
       
       // Redirigimos al usuario a la URL de checkout de Stripe
       if (data?.url) {
@@ -218,4 +217,3 @@ return new Response(JSON.stringify({ ... }), {
 };
 
 export default PurchaseSection;
-
