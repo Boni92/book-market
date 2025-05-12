@@ -10,6 +10,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { createClient } from "@supabase/supabase-js";
+import { loadStripe } from "@stripe/stripe-js";
 
 const PurchaseSection = () => {
   const navigate = useNavigate();
@@ -36,13 +37,23 @@ const PurchaseSection = () => {
         }
       });
       
-      // Invocamos la función Edge con el nombre correcto según la URL: create-payment
+      // Preparamos los parámetros requeridos por el endpoint
+      const endpointParams = {
+        line_items: [
+          {
+            price: "price_1RLSLHRwduV6mlsL1YDvuIMa", // ID del precio proporcionado
+            quantity: 1
+          }
+        ],
+        customer_email: "cliente@example.com", // Aquí podrías obtener el email del usuario si está autenticado
+        success_url: `${window.location.origin}/success`,
+        cancel_url: `${window.location.origin}/`
+      };
+      
+      // Invocamos la función Edge utilizando el endpoint
       console.log("Invocando función create-payment");
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { 
-          priceId: "price_1RLSLHRwduV6mlsL1YDvuIMa", // ID del precio proporcionado
-          productName: "Mi Libro Digital"
-        }
+        body: endpointParams
       });
       
       if (error) {
@@ -56,7 +67,7 @@ const PurchaseSection = () => {
           console.log("Agrega los siguientes encabezados en tu función Edge:");
           console.log(`
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // O específicamente "https://libro-digital-venta.lovable.app"
+  "Access-Control-Allow-Origin": "*", // O específicamente "${window.location.origin}"
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -78,13 +89,30 @@ return new Response(JSON.stringify({ ... }), {
       
       console.log("Respuesta de create-payment:", data);
       
-      // Redirigimos al usuario a la URL de checkout de Stripe
-      if (data?.url) {
+      // Verificamos si tenemos el sessionId y redireccionamos a Stripe Checkout
+      if (data?.sessionId) {
+        try {
+          // Cargar Stripe y redirigir al checkout
+          const stripePublicKey = "pk_test_51RLSCxRwduV6mlsLVUlz5QOtMOlaRSrSCWYJsGoCFnx0ohpxGbUiTiBmTUYJJR4A8DZcJyEKNtSk9qQo1qCLlDAs00HBNVgcLN"; // Reemplaza con tu clave pública
+          const stripe = await loadStripe(stripePublicKey);
+          
+          if (stripe) {
+            toast.success("Redirigiendo a la pasarela de pago...");
+            await stripe.redirectToCheckout({ sessionId: data.sessionId });
+          } else {
+            throw new Error("No se pudo inicializar Stripe");
+          }
+        } catch (stripeError) {
+          console.error("Error redirigiendo a Stripe:", stripeError);
+          throw stripeError;
+        }
+      } else if (data?.url) {
+        // Forma alternativa utilizando la URL retornada directamente
         toast.success("Redirigiendo a la pasarela de pago...");
         console.log("Redirigiendo a URL de Stripe:", data.url);
         window.location.href = data.url;
       } else {
-        throw new Error("No se recibió la URL de checkout en la respuesta");
+        throw new Error("No se recibió la información de checkout en la respuesta");
       }
     } catch (error) {
       console.error("Error procesando el pago:", error);
