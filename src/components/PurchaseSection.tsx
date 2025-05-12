@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -10,7 +9,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { createClient } from "@supabase/supabase-js";
-import { loadStripe } from "@stripe/stripe-js";
 
 const PurchaseSection = () => {
   const navigate = useNavigate();
@@ -89,30 +87,24 @@ return new Response(JSON.stringify({ ... }), {
       
       console.log("Respuesta de create-payment:", data);
       
-      // Verificamos si tenemos el sessionId y redireccionamos a Stripe Checkout
-      if (data?.sessionId) {
-        try {
-          // Cargar Stripe y redirigir al checkout
-          const stripePublicKey = "pk_test_51RLSCxRwduV6mlsLVUlz5QOtMOlaRSrSCWYJsGoCFnx0ohpxGbUiTiBmTUYJJR4A8DZcJyEKNtSk9qQo1qCLlDAs00HBNVgcLN"; // Reemplaza con tu clave pública
-          const stripe = await loadStripe(stripePublicKey);
-          
-          if (stripe) {
-            toast.success("Redirigiendo a la pasarela de pago...");
-            await stripe.redirectToCheckout({ sessionId: data.sessionId });
-          } else {
-            throw new Error("No se pudo inicializar Stripe");
-          }
-        } catch (stripeError) {
-          console.error("Error redirigiendo a Stripe:", stripeError);
-          throw stripeError;
-        }
-      } else if (data?.url) {
-        // Forma alternativa utilizando la URL retornada directamente
+      // Verificamos si tenemos una URL y redireccionamos directamente
+      if (data?.url) {
         toast.success("Redirigiendo a la pasarela de pago...");
         console.log("Redirigiendo a URL de Stripe:", data.url);
+        
+        // Abrir en la misma ventana para evitar problemas con bloqueadores de popups
         window.location.href = data.url;
+      } else if (data?.sessionId) {
+        // Si recibimos sessionId pero no URL, podemos construir la URL manualmente
+        // aunque es mejor que el backend proporcione la URL completa
+        toast.success("Redirigiendo a la pasarela de pago...");
+        console.log("Recibido sessionId, redirigiendo a Stripe:", data.sessionId);
+        
+        // URL directa a Stripe usando el sessionId
+        const stripeCheckoutUrl = `https://checkout.stripe.com/pay/${data.sessionId}`;
+        window.location.href = stripeCheckoutUrl;
       } else {
-        throw new Error("No se recibió la información de checkout en la respuesta");
+        throw new Error("No se recibió URL ni sessionId en la respuesta");
       }
     } catch (error) {
       console.error("Error procesando el pago:", error);
