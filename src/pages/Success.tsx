@@ -48,7 +48,7 @@ const Success = () => {
         
         const supabase = createClient(supabaseUrl, supabaseAnonKey);
         
-        // Verificamos el estado del pago usando la función Edge (aquí también actualizamos el nombre)
+        // Verificamos el estado del pago usando la función Edge verify-payment
         console.log("Invocando función verify-payment");
         const { data, error } = await supabase.functions.invoke('verify-payment', {
           body: { sessionId }
