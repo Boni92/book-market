@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Tooltip,
@@ -10,10 +9,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { createClient } from "@supabase/supabase-js";
-import { loadStripe } from "@stripe/stripe-js";
-
-// Initialize Stripe outside component to avoid recreating on each render
-const stripePromise = loadStripe("pk_test_51RLSCxRwduV6mlsLVUlz5QOtMOlaRSrSCWYJsGoCFnx0ohpxGbUiTiBmTUYJJR4A8DZcJyEKNtSk9qQo1qCLlDAs00HBNVgcLN");
 
 const PurchaseSection = () => {
   const navigate = useNavigate();
@@ -92,34 +87,16 @@ return new Response(JSON.stringify({ ... }), {
       
       console.log("Respuesta de create-payment:", data);
       
-      // Método 1: Usar Stripe.js para redirigir
-      if (data?.sessionId) {
-        toast.success("Redirigiendo a la pasarela de pago...");
-        console.log("Redirigiendo con sessionId:", data.sessionId);
-        
-        const stripe = await stripePromise;
-        if (!stripe) {
-          throw new Error("No se pudo cargar Stripe");
-        }
-        
-        // Redirigir usando el objeto Stripe y el sessionId
-        const { error: redirectError } = await stripe.redirectToCheckout({
-          sessionId: data.sessionId
-        });
-        
-        if (redirectError) {
-          console.error("Error al redirigir con Stripe:", redirectError);
-          throw redirectError;
-        }
-      } 
-      // Método 2: Redirigir directamente a la URL si está disponible
-      else if (data?.url) {
+      // Verificar si recibimos una URL válida en la respuesta
+      if (data?.url) {
         toast.success("Redirigiendo a la pasarela de pago...");
         console.log("Redirigiendo a URL de Stripe:", data.url);
+        
+        // Redirección directa a la URL proporcionada por el endpoint
         window.location.href = data.url;
-      } 
-      else {
-        throw new Error("No se recibió URL ni sessionId en la respuesta");
+      } else {
+        console.error("Respuesta recibida sin URL:", data);
+        throw new Error("No se recibió una URL válida en la respuesta");
       }
     } catch (error) {
       console.error("Error procesando el pago:", error);
