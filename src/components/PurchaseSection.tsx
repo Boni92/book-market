@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -87,6 +88,9 @@ return new Response(JSON.stringify({ ... }), {
       
       console.log("Respuesta de create-payment:", data);
       
+      // Mostrar en consola la estructura completa de la respuesta para depuración
+      console.log("Estructura completa de la respuesta:", JSON.stringify(data, null, 2));
+      
       // Verificar si recibimos una URL válida en la respuesta
       if (data?.url) {
         toast.success("Redirigiendo a la pasarela de pago...");
@@ -94,8 +98,19 @@ return new Response(JSON.stringify({ ... }), {
         
         // Redirección directa a la URL proporcionada por el endpoint
         window.location.href = data.url;
+      } else if (data?.session?.url) {
+        // Algunas implementaciones devuelven la URL dentro de un objeto session
+        toast.success("Redirigiendo a la pasarela de pago...");
+        console.log("Redirigiendo a URL de Stripe (desde session):", data.session.url);
+        window.location.href = data.session.url;
+      } else if (data?.id) {
+        // Si tenemos un ID pero no URL, podría ser un sessionId de Stripe directamente
+        toast.warning("Formato de respuesta inesperado (sólo ID). Contacta con soporte.");
+        console.error("Respuesta inesperada, contiene ID pero no URL:", data);
+        throw new Error("Formato de respuesta inesperado desde la API");
       } else {
         console.error("Respuesta recibida sin URL:", data);
+        toast.error("Error de comunicación con el servidor de pagos. Por favor, inténtalo de nuevo.");
         throw new Error("No se recibió una URL válida en la respuesta");
       }
     } catch (error) {
