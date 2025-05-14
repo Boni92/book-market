@@ -65,7 +65,8 @@ const Success = () => {
           
           console.log("Respuesta de verify-payment:", data);
           
-          if (data?.status === "complete" || data?.status === "paid") {
+          // MODIFICADO: Verificar tanto data?.status como data?.success para compatibilidad
+          if (data?.status === "complete" || data?.status === "paid" || data?.success === true) {
             setPaymentStatus("success");
             setEmailSent(true);
             toast.success("¡Pago confirmado! Hemos enviado tu libro digital por correo electrónico.");
@@ -73,8 +74,8 @@ const Success = () => {
             setPaymentStatus("pending");
             toast.warning("Pago en proceso. Te enviaremos el libro por correo cuando se confirme el pago.");
           } else {
-            console.error("Estado de pago desconocido:", data?.status);
-            throw new Error(`Estado de pago desconocido: ${data?.status}`);
+            console.error("Estado de pago desconocido:", data?.status || "Sin estado definido");
+            throw new Error(`Estado de pago desconocido: ${data?.status || data?.message || "Sin información"}`);
           }
         } catch (error) {
           // Detectar error específico de CORS
