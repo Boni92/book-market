@@ -53,6 +53,7 @@ const Success = () => {
         console.log("Invocando función verify-payment");
         
         try {
+          // Enviamos el sessionId en el body como un objeto JSON para que lo reciba correctamente
           const { data, error } = await supabase.functions.invoke('verify-payment', {
             body: { sessionId }
           });

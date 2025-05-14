@@ -45,7 +45,7 @@ const PurchaseSection = () => {
           }
         ],
         customer_email: "cliente@example.com", // Aquí podrías obtener el email del usuario si está autenticado
-        success_url: `${window.location.origin}/success`,
+        success_url: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`, // CORREGIDO: Añadido session_id como parámetro
         cancel_url: `${window.location.origin}/`
       };
       
