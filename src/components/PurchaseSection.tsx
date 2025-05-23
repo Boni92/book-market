@@ -9,117 +9,10 @@ import {
 } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
-import { createClient } from "@supabase/supabase-js";
 
 const PurchaseSection = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  
-  const handleStripePurchase = async () => {
-    setIsLoading(true);
-    try {
-      // Inicializamos el cliente de Supabase con las variables de entorno
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      // Validamos que las variables de entorno estén configuradas
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error("Faltan variables de entorno de Supabase");
-      }
-      
-      console.log("Conectando a Supabase:", supabaseUrl);
-      
-      // Creamos el cliente de Supabase con opciones para manejar CORS
-      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          persistSession: true
-        }
-      });
-      
-      // Preparamos los parámetros requeridos por el endpoint
-      const endpointParams = {
-        line_items: [
-          {
-            price: "price_1RLSLHRwduV6mlsL1YDvuIMa", // ID del precio proporcionado
-            quantity: 1
-          }
-        ],
-        customer_email: "cliente@example.com", // Aquí podrías obtener el email del usuario si está autenticado
-        success_url: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`, // CORREGIDO: Añadido session_id como parámetro
-        cancel_url: `${window.location.origin}/`
-      };
-      
-      // Invocamos la función Edge utilizando el endpoint
-      console.log("Invocando función create-payment");
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: endpointParams
-      });
-      
-      if (error) {
-        console.error("Error desde función Edge:", error);
-        
-        // Mensaje específico para error de CORS
-        if (error.message && error.message.includes("Failed to send a request")) {
-          toast.error("Error de CORS: No se puede conectar con las funciones de Supabase. Por favor, configura los encabezados CORS en tu función Edge.");
-          
-          console.log("SOLUCIÓN: Necesitas configurar tu función Edge de Supabase para permitir solicitudes CORS desde tu dominio.");
-          console.log("Agrega los siguientes encabezados en tu función Edge:");
-          console.log(`
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // O específicamente "${window.location.origin}"
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-// Al inicio de tu función:
-if (req.method === "OPTIONS") {
-  return new Response(null, { headers: corsHeaders });
-}
-
-// En todas las respuestas:
-return new Response(JSON.stringify({ ... }), {
-  headers: { ...corsHeaders, "Content-Type": "application/json" },
-  status: 200,
-});
-          `);
-          throw new Error("Error de CORS. Revisa la consola para la solución.");
-        }
-        throw error;
-      }
-      
-      console.log("Respuesta de create-payment:", data);
-      
-      // Mostrar en consola la estructura completa de la respuesta para depuración
-      console.log("Estructura completa de la respuesta:", JSON.stringify(data, null, 2));
-      
-      // Verificar si recibimos una URL válida en la respuesta
-      if (data?.url) {
-        toast.success("Redirigiendo a la pasarela de pago...");
-        console.log("Redirigiendo a URL de Stripe:", data.url);
-        
-        // Redirección directa a la URL proporcionada por el endpoint
-        window.location.href = data.url;
-      } else if (data?.session?.url) {
-        // Algunas implementaciones devuelven la URL dentro de un objeto session
-        toast.success("Redirigiendo a la pasarela de pago...");
-        console.log("Redirigiendo a URL de Stripe (desde session):", data.session.url);
-        window.location.href = data.session.url;
-      } else if (data?.id) {
-        // Si tenemos un ID pero no URL, podría ser un sessionId de Stripe directamente
-        toast.warning("Formato de respuesta inesperado (sólo ID). Contacta con soporte.");
-        console.error("Respuesta inesperada, contiene ID pero no URL:", data);
-        throw new Error("Formato de respuesta inesperado desde la API");
-      } else {
-        console.error("Respuesta recibida sin URL:", data);
-        toast.error("Error de comunicación con el servidor de pagos. Por favor, inténtalo de nuevo.");
-        throw new Error("No se recibió una URL válida en la respuesta");
-      }
-    } catch (error) {
-      console.error("Error procesando el pago:", error);
-      toast.error(`Error al procesar el pago: ${error instanceof Error ? error.message : "Por favor revisa la consola para más detalles"}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
   
   const paymentOptions = [
     {
@@ -128,7 +21,7 @@ return new Response(JSON.stringify({ ... }), {
       description: "Pago seguro y rápido con PayPal",
       icon: "https://cdn.cdnlogo.com/logos/p/19/paypal.svg",
       buttonText: "Comprar con PayPal",
-      actionUrl: "#", // Replace with actual PayPal checkout URL
+      actionUrl: "#", // Placeholder - necesita configuración backend
       color: "bg-[#0070BA]"
     },
     {
@@ -137,25 +30,26 @@ return new Response(JSON.stringify({ ... }), {
       description: "Múltiples opciones de pago con MercadoPago",
       icon: "https://logodownload.org/wp-content/uploads/2019/06/mercado-pago-logo-0.png",
       buttonText: "Pagar con MercadoPago",
-      actionUrl: "#", // Replace with actual MercadoPago checkout URL
+      actionUrl: "#", // Placeholder - necesita configuración backend
       color: "bg-[#00B1EA]"
     },
-    {
-      id: "stripe",
-      name: "Stripe",
-      description: "Pago seguro con tarjeta de crédito/débito",
-      icon: "https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg",
-      buttonText: "Pagar con Tarjeta",
-      action: handleStripePurchase,
-      color: "bg-[#6772E5]"
-    },
+    // Stripe temporalmente oculto
+    // {
+    //   id: "stripe",
+    //   name: "Stripe",
+    //   description: "Pago seguro con tarjeta de crédito/débito",
+    //   icon: "https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg",
+    //   buttonText: "Pagar con Tarjeta",
+    //   action: handleStripePurchase,
+    //   color: "bg-[#6772E5]"
+    // },
     {
       id: "gumroad",
       name: "Gumroad",
       description: "Descarga instantánea a través de Gumroad",
       icon: "https://assets-global.website-files.com/6171b265e5c8aa59b42c3472/618ea7afd990103829d614ff_gumroad-g.png",
       buttonText: "Comprar en Gumroad",
-      actionUrl: "#", // Replace with actual Gumroad URL
+      actionUrl: "https://gumroad.com/",
       color: "bg-[#FF90E8]"
     },
     {
@@ -164,7 +58,7 @@ return new Response(JSON.stringify({ ... }), {
       description: "Compra a través de Amazon",
       icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/1024px-Amazon_logo.svg.png",
       buttonText: "Comprar en Amazon",
-      actionUrl: "#", // Replace with actual Amazon URL
+      actionUrl: "https://www.amazon.com/Stepping-Gemstones-Ideas-guide-your/dp/B0DTG8B267",
       color: "bg-[#FF9900]"
     }
   ];
@@ -184,7 +78,7 @@ return new Response(JSON.stringify({ ... }), {
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {paymentOptions.map((option) => (
             <Card key={option.id} className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
               <div className={`h-2 ${option.color}`}></div>
@@ -209,6 +103,12 @@ return new Response(JSON.stringify({ ... }), {
                           target="_blank"
                           rel="noopener noreferrer"
                           className={`${option.color} text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg w-full block text-center`}
+                          onClick={(e) => {
+                            if (option.actionUrl === "#") {
+                              e.preventDefault();
+                              toast.info(`${option.name} estará disponible próximamente`);
+                            }
+                          }}
                         >
                           {option.buttonText}
                         </a>
